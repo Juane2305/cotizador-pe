@@ -1,4 +1,4 @@
-import { createEmptyQuote, DEFAULT_COVERAGE, formatDisplayDate, normalizeQuote } from './data.js';
+import { createEmptyQuote, DEFAULT_COVERAGE, DEFAULT_FLEET_VEHICLE, formatDisplayDate, normalizeQuote } from './data.js';
 import { renderQuotePreview } from './template.js';
 import {
   createDuplicateQuote,
@@ -22,6 +22,7 @@ const state = {
 
 const form = document.querySelector('#quote-form');
 const coveragesContainer = document.querySelector('#coverage-rows');
+const fleetVehicleContainer = document.querySelector('#fleet-vehicle-rows');
 const previewContainer = document.querySelector('#quote-preview');
 const historyList = document.querySelector('#history-list');
 const historySearch = document.querySelector('#history-search');
@@ -31,6 +32,10 @@ const downloadButton = document.querySelector('#download-pdf');
 const printButton = document.querySelector('#print-quote');
 const newButton = document.querySelector('#new-quote');
 const saveButton = document.querySelector('#save-quote');
+const fleetSection = document.querySelector('#fleet-section');
+const addFleetVehicleButton = document.querySelector('#add-fleet-vehicle');
+const generalCoveragesTitle = document.querySelector('#general-coverages-title');
+const insuredObjectLabel = document.querySelector('[data-insured-object-label]');
 
 const fieldMap = {
   producerAdvisorName: ['producer', 'advisorName'],
@@ -41,6 +46,7 @@ const fieldMap = {
   clientDocument: ['client', 'document'],
   clientPhone: ['client', 'phone'],
   clientEmail: ['client', 'email'],
+  quoteType: ['quoteType'],
   quoteDate: ['quoteDate'],
   quoteNumber: ['quoteNumber'],
   insuranceType: ['insurance', 'type'],
@@ -67,6 +73,12 @@ function getDeepValue(target, path) {
   return path.reduce((acc, key) => acc?.[key], target) ?? '';
 }
 
+function ensureFleetVehicles() {
+  if (state.currentQuote.quoteType === 'fleet' && !state.currentQuote.fleetVehicles.length) {
+    state.currentQuote.fleetVehicles.push(DEFAULT_FLEET_VEHICLE());
+  }
+}
+
 function createFreshQuote() {
   const sequence = getNextSequence();
   reserveSequence(sequence);
@@ -87,8 +99,23 @@ function updateQuoteFromField(name, value) {
   if (!path) return;
   setDeepValue(state.currentQuote, path, value);
   state.currentQuote.updatedAt = new Date().toISOString();
+
+  if (name === 'quoteType') {
+    ensureFleetVehicles();
+    render();
+    return;
+  }
+
   if (path[0] === 'producer') syncProducerProfileFromQuote();
   renderPreview();
+}
+
+function createLabeledField(labelText, control) {
+  const wrapper = document.createElement('label');
+  const label = document.createElement('span');
+  label.textContent = labelText;
+  wrapper.append(label, control);
+  return wrapper;
 }
 
 function renderCoveragesRows() {
@@ -124,12 +151,70 @@ function renderCoveragesRows() {
   });
 }
 
+function renderFleetVehicleRows() {
+  fleetVehicleContainer.innerHTML = '';
+  state.currentQuote.fleetVehicles.forEach((vehicle, index) => {
+    const card = document.createElement('div');
+    const header = document.createElement('div');
+    const title = document.createElement('strong');
+    const removeButton = document.createElement('button');
+    const grid = document.createElement('div');
+
+    card.className = 'fleet-vehicle-card';
+    header.className = 'fleet-vehicle-card__header';
+    title.textContent = `Vehículo ${index + 1}`;
+    removeButton.type = 'button';
+    removeButton.className = 'ghost danger';
+    removeButton.dataset.removeFleetVehicle = vehicle.id;
+    removeButton.disabled = state.currentQuote.fleetVehicles.length === 1;
+    removeButton.textContent = 'Eliminar';
+    header.append(title, removeButton);
+
+    grid.className = 'fleet-vehicle-card__grid';
+
+    const fields = [
+      ['Marca', 'brand', 'Ej: Toyota'],
+      ['Modelo', 'model', 'Ej: Hilux 4x4'],
+      ['Año', 'year', 'Ej: 2023'],
+      ['Suma asegurada', 'insuredAmount', '$ 0,00'],
+      ['Cobertura', 'coverage', 'Ej: Todo riesgo'],
+      ['Detalle breve de cobertura', 'coverageDetail', 'Ej: terceros completos con granizo y cristales']
+    ];
+
+    fields.forEach(([labelText, field, placeholder]) => {
+      const control = field === 'coverageDetail' ? document.createElement('textarea') : document.createElement('input');
+      if (control instanceof HTMLTextAreaElement) {
+        control.rows = 2;
+      } else {
+        control.type = 'text';
+      }
+      control.placeholder = placeholder;
+      control.value = vehicle[field];
+      control.dataset.fleetVehicleId = vehicle.id;
+      control.dataset.field = field;
+      grid.appendChild(createLabeledField(labelText, control));
+    });
+
+    card.append(header, grid);
+    fleetVehicleContainer.appendChild(card);
+  });
+}
+
+function renderConditionalSections() {
+  const isFleet = state.currentQuote.quoteType === 'fleet';
+  fleetSection.hidden = !isFleet;
+  insuredObjectLabel.textContent = isFleet ? 'Descripción general de la flota' : 'Objeto asegurado / descripción general';
+  generalCoveragesTitle.textContent = isFleet ? 'Coberturas generales (opcional)' : 'Coberturas incluidas';
+}
+
 function renderForm() {
   Object.entries(fieldMap).forEach(([name, path]) => {
     const field = form.elements.namedItem(name);
     if (field) field.value = getDeepValue(state.currentQuote, path);
   });
+  renderConditionalSections();
   renderCoveragesRows();
+  renderFleetVehicleRows();
 }
 
 function renderPreview() {
@@ -137,7 +222,8 @@ function renderPreview() {
 }
 
 function formatHistoryMeta(quote) {
-  return `${formatDisplayDate(quote.quoteDate)} · ${quote.insurance.type || 'Seguro'} · ${quote.insurance.company || 'Sin compañía'}`;
+  const suffix = quote.quoteType === 'fleet' ? 'Flota' : quote.insurance.type || 'Seguro';
+  return `${formatDisplayDate(quote.quoteDate)} · ${suffix} · ${quote.insurance.company || 'Sin compañía'}`;
 }
 
 function renderHistory() {
@@ -149,7 +235,8 @@ function renderHistory() {
       quote.client.fullName,
       quote.client.document,
       quote.insurance.type,
-      quote.insurance.company
+      quote.insurance.company,
+      quote.quoteType
     ]
       .join(' ')
       .toLowerCase();
@@ -191,6 +278,7 @@ function renderActions() {
 }
 
 function render() {
+  ensureFleetVehicles();
   renderForm();
   renderPreview();
   renderHistory();
@@ -202,6 +290,7 @@ function selectQuote(quoteId) {
   if (!found) return;
   state.currentQuote = structuredClone(found);
   state.selectedQuoteId = found.id;
+  ensureFleetVehicles();
   setStatus(`Revisando ${found.quoteNumber}.`, 'neutral');
   render();
 }
@@ -225,7 +314,7 @@ function openQuoteDocument(mode = 'print') {
   }
 
   const html = renderQuotePreview(state.currentQuote, { logoUrl: PRODUCER_LOGO_URL });
-  const stylesheetUrl = new URL('../styles.css', window.location.href).href;
+  const stylesheetUrl = new URL('./styles.css', window.location.href).href;
   const hint = mode === 'download'
     ? 'Este archivo sale EXACTAMENTE del mismo HTML del preview. Elegí Guardar como PDF en el diálogo.'
     : 'Usá el diálogo del navegador para imprimir o guardar como PDF.';
@@ -274,6 +363,7 @@ function duplicateCurrentQuote() {
 
   if (!baseQuote) return;
   state.currentQuote = createDuplicateQuote(baseQuote);
+  ensureFleetVehicles();
   state.selectedQuoteId = null;
   setStatus(`Duplicada como ${state.currentQuote.quoteNumber}.`, 'success');
   render();
@@ -291,15 +381,37 @@ function removeCoverage(id) {
   render();
 }
 
+function addFleetVehicle() {
+  state.currentQuote.fleetVehicles.push(DEFAULT_FLEET_VEHICLE());
+  state.currentQuote.updatedAt = new Date().toISOString();
+  render();
+}
+
+function removeFleetVehicle(id) {
+  state.currentQuote.fleetVehicles = state.currentQuote.fleetVehicles.filter((vehicle) => vehicle.id !== id);
+  ensureFleetVehicles();
+  state.currentQuote.updatedAt = new Date().toISOString();
+  render();
+}
+
 function initEvents() {
   form.addEventListener('input', (event) => {
     const target = event.target;
-    if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return;
+    if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement)) return;
 
     if (target.dataset.coverageId) {
       const item = state.currentQuote.coverages.find((coverage) => coverage.id === target.dataset.coverageId);
       if (!item) return;
       item[target.dataset.field] = target.value;
+      state.currentQuote.updatedAt = new Date().toISOString();
+      renderPreview();
+      return;
+    }
+
+    if (target.dataset.fleetVehicleId) {
+      const vehicle = state.currentQuote.fleetVehicles.find((item) => item.id === target.dataset.fleetVehicleId);
+      if (!vehicle) return;
+      vehicle[target.dataset.field] = target.value;
       state.currentQuote.updatedAt = new Date().toISOString();
       renderPreview();
       return;
@@ -315,7 +427,15 @@ function initEvents() {
     if (removeId) removeCoverage(removeId);
   });
 
+  fleetVehicleContainer.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const removeId = target.getAttribute('data-remove-fleet-vehicle');
+    if (removeId) removeFleetVehicle(removeId);
+  });
+
   document.querySelector('#add-coverage').addEventListener('click', addCoverage);
+  addFleetVehicleButton.addEventListener('click', addFleetVehicle);
   newButton.addEventListener('click', () => {
     state.currentQuote = createFreshQuote();
     state.selectedQuoteId = null;
@@ -349,6 +469,7 @@ function bootstrap() {
   if (state.quotes.length) {
     state.currentQuote = structuredClone(state.quotes[0]);
     state.selectedQuoteId = state.currentQuote.id;
+    ensureFleetVehicles();
     setStatus(`Cargamos la última cotización: ${state.currentQuote.quoteNumber}.`, 'neutral');
   } else {
     state.currentQuote = createFreshQuote();

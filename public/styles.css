@@ -19,7 +19,7 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); }
-button, input, textarea { font: inherit; }
+button, input, textarea, select { font: inherit; }
 button {
   cursor: pointer;
   border: 0;
@@ -33,7 +33,7 @@ button:hover { opacity: 0.95; }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 button.ghost { background: #edf3fb; color: var(--navy); }
 button.ghost.danger { color: #b42318; }
-input, textarea {
+input, textarea, select {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -41,7 +41,7 @@ input, textarea {
   background: #fff;
   color: var(--text);
 }
-input:focus, textarea:focus {
+input:focus, textarea:focus, select:focus {
   outline: 2px solid rgba(29, 62, 111, 0.12);
   border-color: var(--navy);
 }
@@ -150,6 +150,12 @@ h2 { font-size: clamp(1.8rem, 1.4vw, 2.4rem); }
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .form-grid__full { grid-column: 1 / -1; }
+[hidden] { display: none !important; }
+.fleet-vehicle-list { display: grid; gap: 16px; }
+.fleet-vehicle-card { border: 1px solid var(--line); border-radius: 16px; padding: 16px; background: #fff; }
+.fleet-vehicle-card__header { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 14px; }
+.fleet-vehicle-card__header strong { color: var(--navy-strong); font-size: 1rem; }
+.fleet-vehicle-card__grid { display: grid; gap: 14px 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .coverage-list { display: grid; gap: 14px; }
 .coverage-row {
   display: grid;
@@ -293,6 +299,17 @@ h2 { font-size: clamp(1.8rem, 1.4vw, 2.4rem); }
 }
 .quote-table th:first-child { background: var(--navy); color: #fff; }
 .quote-table th:last-child { background: var(--orange); color: #fff; }
+.quote-table--fleet th:nth-child(2), .quote-table--fleet td:nth-child(2) { width: 92px; text-align: center; }
+.quote-fleet-count { margin: 0 0 12px; color: var(--muted); }
+.quote-fleet-card-grid { display: grid; gap: 14px; }
+.quote-fleet-card { border: 1px solid #cdd8e7; border-radius: 14px; padding: 14px; background: #fbfdff; }
+.quote-fleet-card h3 { margin: 0 0 12px; color: var(--navy-strong); font-size: 1rem; }
+.quote-fleet-card__grid { display: grid; gap: 12px 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.quote-fleet-card__grid div { display: grid; gap: 0.3rem; }
+.quote-fleet-card__grid span { color: var(--muted); font-size: 0.85rem; }
+.quote-fleet-card__grid strong { font-size: 0.98rem; color: var(--text); }
+.quote-fleet-card__detail { grid-column: 1 / -1; }
+.quote-annex-page { page-break-before: always; break-before: page; margin-top: 28px; }
 .quote-values {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
@@ -394,10 +411,12 @@ h2 { font-size: clamp(1.8rem, 1.4vw, 2.4rem); }
   .toolbar button, .form-actions button { width: 100%; }
   .form-grid,
   .coverage-row,
+  .fleet-vehicle-card__grid,
   .quote-signatures,
   .quote-grid,
   .quote-values,
-  .quote-sheet__header {
+  .quote-sheet__header,
+  .quote-fleet-card__grid {
     grid-template-columns: 1fr;
   }
   .form-section__header {

@@ -1,7 +1,7 @@
 export const APP_STORAGE_KEYS = {
-  quotes: 'insurance-quotes-v2',
-  producerProfile: 'insurance-producer-profile-v2',
-  meta: 'insurance-meta-v2'
+  quotes: 'insurance-quotes-v3',
+  producerProfile: 'insurance-producer-profile-v3',
+  meta: 'insurance-meta-v3'
 };
 
 export const DEFAULT_CONDITIONS = [
@@ -14,6 +14,16 @@ export const DEFAULT_COVERAGE = () => ({
   id: cryptoSafeId(),
   coverage: '',
   detail: ''
+});
+
+export const DEFAULT_FLEET_VEHICLE = () => ({
+  id: cryptoSafeId(),
+  brand: '',
+  model: '',
+  year: '',
+  insuredAmount: '',
+  coverage: '',
+  coverageDetail: ''
 });
 
 export function cryptoSafeId() {
@@ -47,6 +57,7 @@ export function createEmptyQuote({ producer = {}, sequence = 1, now = new Date()
     id: cryptoSafeId(),
     createdAt: now.toISOString(),
     updatedAt: now.toISOString(),
+    quoteType: 'individual',
     quoteNumber: createQuoteNumber(sequence, now),
     quoteDate: formatDateInput(now),
     producer: {
@@ -75,6 +86,7 @@ export function createEmptyQuote({ producer = {}, sequence = 1, now = new Date()
       monthlyPremium: '',
       annualPremium: ''
     },
+    fleetVehicles: [],
     coverages: [DEFAULT_COVERAGE()],
     notes: DEFAULT_CONDITIONS
   };
@@ -83,6 +95,7 @@ export function createEmptyQuote({ producer = {}, sequence = 1, now = new Date()
 export function normalizeQuote(rawQuote) {
   return {
     ...rawQuote,
+    quoteType: rawQuote?.quoteType === 'fleet' ? 'fleet' : 'individual',
     producer: {
       advisorName: rawQuote?.producer?.advisorName?.trim() || '',
       phone: rawQuote?.producer?.phone?.trim() || '',
@@ -110,6 +123,17 @@ export function normalizeQuote(rawQuote) {
         rawQuote?.insurance?.monthlyPremium?.trim() || rawQuote?.insurance?.installmentValue?.trim() || '',
       annualPremium: rawQuote?.insurance?.annualPremium?.trim() || rawQuote?.insurance?.totalPremium?.trim() || ''
     },
+    fleetVehicles: Array.isArray(rawQuote?.fleetVehicles)
+      ? rawQuote.fleetVehicles.map((vehicle) => ({
+          id: vehicle.id || cryptoSafeId(),
+          brand: vehicle.brand?.trim() || '',
+          model: vehicle.model?.trim() || '',
+          year: vehicle.year?.trim() || '',
+          insuredAmount: vehicle.insuredAmount?.trim() || '',
+          coverage: vehicle.coverage?.trim() || '',
+          coverageDetail: vehicle.coverageDetail?.trim() || ''
+        }))
+      : [],
     coverages: Array.isArray(rawQuote?.coverages) && rawQuote.coverages.length
       ? rawQuote.coverages.map((item) => ({
           id: item.id || cryptoSafeId(),

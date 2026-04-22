@@ -83,6 +83,13 @@
             <div class="form-section__title">Detalle del seguro</div>
             <div class="form-grid">
               <label>
+                <span>Tipo de cotización</span>
+                <select name="quoteType">
+                  <option value="individual">Individual</option>
+                  <option value="fleet">Flota</option>
+                </select>
+              </label>
+              <label>
                 <span>Tipo de seguro</span>
                 <input name="insuranceType" type="text" placeholder="Automotor / Hogar / AP" />
               </label>
@@ -95,8 +102,8 @@
                 <input name="insurancePlan" type="text" placeholder="Todo riesgo / Terceros completo" />
               </label>
               <label>
-                <span>Objeto asegurado</span>
-                <input name="insuranceInsuredObject" type="text" placeholder="Ej: Ford Focus 2020 / vivienda" />
+                <span data-insured-object-label>Objeto asegurado / descripción general</span>
+                <input name="insuranceInsuredObject" type="text" placeholder="Ej: Ford Focus 2020 / descripción de la flota" />
               </label>
               <label>
                 <span>Vigencia desde</span>
@@ -113,10 +120,21 @@
             </div>
           </section>
 
-          <section class="form-section">
-            <div class="form-section__title">Coberturas incluidas</div>
+          <section class="form-section" id="fleet-section" hidden>
             <div class="form-section__header">
-              <p class="form-section__hint">Podés cargar varias coberturas y límites.</p>
+              <div>
+                <div class="form-section__title">Vehículos de flota</div>
+                <p class="form-section__hint">El PDF muestra un resumen comercial y, si hay muchos vehículos, arma un anexo detallado.</p>
+              </div>
+              <button type="button" class="ghost" id="add-fleet-vehicle">Agregar vehículo</button>
+            </div>
+            <div id="fleet-vehicle-rows" class="fleet-vehicle-list"></div>
+          </section>
+
+          <section class="form-section">
+            <div class="form-section__title" id="general-coverages-title">Coberturas incluidas</div>
+            <div class="form-section__header">
+              <p class="form-section__hint">Podés cargar coberturas generales de la póliza si aplica.</p>
               <button type="button" class="ghost" id="add-coverage">Agregar cobertura</button>
             </div>
             <div id="coverage-rows" class="coverage-list"></div>

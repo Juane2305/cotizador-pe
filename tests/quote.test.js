@@ -108,3 +108,38 @@ test('createQuotePdf returns a valid pdf payload with the new financial fields',
   assert.match(text, /PREMIO MENSUAL/);
   assert.ok(bytes.length > 3200);
 });
+
+
+test('renderQuotePreview builds fleet summary and annex for larger fleets', () => {
+  const quote = normalizeQuote({
+    ...createEmptyQuote({ sequence: 5 }),
+    quoteType: 'fleet',
+    client: { fullName: 'Transporte Andino', document: '30-555', phone: '261', email: 'fleet@test.com' },
+    insurance: {
+      type: 'Automotor',
+      company: 'San Cristóbal',
+      plan: 'Flota Premium',
+      insuredObject: 'Camiones y utilitarios',
+      validFrom: '2026-05-01',
+      validUntil: '2027-05-01',
+      paymentMethod: 'Mensual',
+      insuredAmount: '$ 200.000.000',
+      deductible: '$ 1.000.000',
+      monthlyPremium: '$ 2.500.000',
+      annualPremium: '$ 30.000.000'
+    },
+    fleetVehicles: [
+      { id: '1', brand: 'Toyota', model: 'Hilux', year: '2023', insuredAmount: '$ 30.000.000', coverage: 'Todo riesgo', coverageDetail: 'Con granizo' },
+      { id: '2', brand: 'Ford', model: 'Ranger', year: '2022', insuredAmount: '$ 28.000.000', coverage: 'Todo riesgo', coverageDetail: 'Sin franquicia' },
+      { id: '3', brand: 'Iveco', model: 'Daily', year: '2021', insuredAmount: '$ 35.000.000', coverage: 'Terceros completo', coverageDetail: 'Con cristales' },
+      { id: '4', brand: 'Mercedes', model: 'Sprinter', year: '2020', insuredAmount: '$ 25.000.000', coverage: 'Terceros completo', coverageDetail: 'Con robo parcial' }
+    ],
+    notes: 'Validez 15 días.\nSujeto a inspección.'
+  });
+
+  const html = renderQuotePreview(quote, { logoUrl: '/logo.png' });
+  assert.match(html, /RESUMEN DE FLOTA/);
+  assert.match(html, /ANEXO DE VEHÍCULOS/);
+  assert.match(html, /Toyota Hilux/);
+  assert.match(html, /Mercedes Sprinter/);
+});
