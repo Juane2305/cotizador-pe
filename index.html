@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cotizador de seguros</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="panel form-panel">
+        <div class="panel__heading panel__heading--form">
+          <div>
+            <p class="eyebrow">V1 · responsive</p>
+            <h1>Cotizador de seguros</h1>
+            <p class="panel__subtitle">Cargás datos, previsualizás y descargás un PDF prolijo para enviar al cliente.</p>
+          </div>
+          <div class="toolbar">
+            <button type="button" class="ghost" id="new-quote">Nueva</button>
+            <button type="button" class="ghost" id="duplicate-quote">Duplicar</button>
+            <button type="button" class="ghost" id="print-quote">Imprimir</button>
+            <button type="button" id="download-pdf">Descargar PDF</button>
+          </div>
+        </div>
+
+        <p class="status-message" id="status-message" data-tone="neutral"></p>
+
+        <form id="quote-form" class="quote-form">
+          <section class="form-section">
+            <div class="form-section__title">Datos del productor</div>
+            <p class="form-section__hint">Se usa automáticamente el logo de <strong>/public/logo.png</strong> en la vista previa e impresión.</p>
+            <div class="form-grid">
+              <label>
+                <span>Nombre</span>
+                <input name="producerAdvisorName" type="text" placeholder="Ej: Paula Estévez" />
+              </label>
+              <label>
+                <span>Teléfono</span>
+                <input name="producerPhone" type="text" placeholder="Ej: 261 555-1234" />
+              </label>
+              <label>
+                <span>Email</span>
+                <input name="producerEmail" type="email" placeholder="Ej: productor@email.com" />
+              </label>
+              <label>
+                <span>Matrícula</span>
+                <input name="producerRegistration" type="text" placeholder="Ej: 12345" />
+              </label>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <div class="form-section__title">Datos del cliente</div>
+            <div class="form-grid">
+              <label>
+                <span>Nombre / Razón social</span>
+                <input name="clientFullName" type="text" placeholder="Ej: Juan Pérez" />
+              </label>
+              <label>
+                <span>DNI / CUIT</span>
+                <input name="clientDocument" type="text" placeholder="Ej: 20-12345678-9" />
+              </label>
+              <label>
+                <span>Teléfono</span>
+                <input name="clientPhone" type="text" placeholder="Ej: 261 444-3344" />
+              </label>
+              <label>
+                <span>Email</span>
+                <input name="clientEmail" type="email" placeholder="cliente@email.com" />
+              </label>
+              <label>
+                <span>Fecha de cotización</span>
+                <input name="quoteDate" type="date" />
+              </label>
+              <label>
+                <span>Número de cotización</span>
+                <input name="quoteNumber" type="text" />
+              </label>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <div class="form-section__title">Detalle del seguro</div>
+            <div class="form-grid">
+              <label>
+                <span>Tipo de seguro</span>
+                <input name="insuranceType" type="text" placeholder="Automotor / Hogar / AP" />
+              </label>
+              <label>
+                <span>Compañía</span>
+                <input name="insuranceCompany" type="text" placeholder="Ej: San Cristóbal Seguros" />
+              </label>
+              <label>
+                <span>Plan / Modalidad</span>
+                <input name="insurancePlan" type="text" placeholder="Todo riesgo / Terceros completo" />
+              </label>
+              <label>
+                <span>Objeto asegurado</span>
+                <input name="insuranceInsuredObject" type="text" placeholder="Ej: Ford Focus 2020 / vivienda" />
+              </label>
+              <label>
+                <span>Vigencia desde</span>
+                <input name="insuranceValidFrom" type="date" />
+              </label>
+              <label>
+                <span>Vigencia hasta</span>
+                <input name="insuranceValidUntil" type="date" />
+              </label>
+              <label class="form-grid__full">
+                <span>Forma de pago</span>
+                <input name="insurancePaymentMethod" type="text" placeholder="Mensual / Semestral / Anual / Contado" />
+              </label>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <div class="form-section__title">Coberturas incluidas</div>
+            <div class="form-section__header">
+              <p class="form-section__hint">Podés cargar varias coberturas y límites.</p>
+              <button type="button" class="ghost" id="add-coverage">Agregar cobertura</button>
+            </div>
+            <div id="coverage-rows" class="coverage-list"></div>
+          </section>
+
+          <section class="form-section">
+            <div class="form-section__title">Suma asegurada y valores</div>
+            <div class="form-grid">
+              <label>
+                <span>Suma asegurada</span>
+                <input name="insuranceInsuredAmount" type="text" placeholder="$ 0,00" />
+              </label>
+              <label>
+                <span>Franquicia</span>
+                <input name="insuranceDeductible" type="text" placeholder="$ 0,00 / Sin franquicia" />
+              </label>
+              <label>
+                <span>Premio mensual</span>
+                <input name="insuranceMonthlyPremium" type="text" placeholder="$ 0,00" />
+              </label>
+              <label>
+                <span>Premio anual</span>
+                <input name="insuranceAnnualPremium" type="text" placeholder="$ 0,00" />
+              </label>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <div class="form-section__title">Observaciones y condiciones</div>
+            <label>
+              <span>Texto que sale en el PDF</span>
+              <textarea name="notes" rows="6" placeholder="Una condición por línea"></textarea>
+            </label>
+          </section>
+
+          <div class="form-actions">
+            <button type="submit" id="save-quote">Guardar cotización</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel preview-panel">
+        <div class="panel__heading panel__heading--stacked">
+          <div>
+            <p class="eyebrow">Preview</p>
+            <h2>Vista previa del PDF</h2>
+          </div>
+        </div>
+        <div id="quote-preview" class="preview-frame"></div>
+      </section>
+
+      <aside class="panel history-panel">
+        <div class="panel__heading panel__heading--stacked">
+          <div>
+            <p class="eyebrow">Historial simple</p>
+            <h2>Cotizaciones</h2>
+          </div>
+          <label>
+            <span>Buscar</span>
+            <input id="history-search" type="search" placeholder="Cliente, número, compañía..." />
+          </label>
+        </div>
+        <div id="history-list" class="history-list"></div>
+      </aside>
+    </main>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
