@@ -1,6 +1,6 @@
 # Cotizador de seguros
 
-Mini sistema web responsive para cargar cotizaciones, guardarlas en historial local y generar un PDF listo para enviar al cliente.
+Mini sistema web responsive servido desde `public/` para cargar cotizaciones, guardarlas en historial local y generar un PDF listo para enviar al cliente.
 
 ## Qué incluye
 
@@ -26,7 +26,7 @@ npm test
 
 ## Notas
 
-- No necesita backend para esta v1.
+- No necesita backend para esta v1 y Vercel toma `public/` como raíz del sitio.
 - Los datos quedan guardados en el navegador del dispositivo donde se use.
 - Si más adelante querés multiusuario o sincronización, ahí sí conviene agregar backend y login.
 # cotizador-pe

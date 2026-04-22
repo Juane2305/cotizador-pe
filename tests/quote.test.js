@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createEmptyQuote, createQuoteNumber, duplicateQuoteData, normalizeQuote } from '../src/data.js';
-import { createQuotePdf } from '../src/pdf.js';
-import { renderQuotePreview } from '../src/template.js';
+import { createEmptyQuote, createQuoteNumber, duplicateQuoteData, normalizeQuote } from '../public/src/data.js';
+import { createQuotePdf } from '../public/src/pdf.js';
+import { renderQuotePreview } from '../public/src/template.js';
 
 test('createQuoteNumber formats year and sequence', () => {
   const quoteNumber = createQuoteNumber(7, new Date('2026-04-22T12:00:00Z'));
@@ -59,12 +59,12 @@ test('renderQuotePreview injects the main business data and value section', () =
     notes: 'Sin franquicia.\nValidez 15 días.'
   });
 
-  const html = renderQuotePreview(quote, { logoUrl: '/public/logo.png' });
+  const html = renderQuotePreview(quote, { logoUrl: '/logo.png' });
   assert.match(html, /Ana López/);
   assert.match(html, /Hogar/);
   assert.match(html, /Incendio/);
   assert.match(html, /SUMA ASEGURADA Y VALORES/);
-  assert.match(html, /public\/logo\.png/);
+  assert.match(html, /logo\.png/);
 });
 
 test('createQuotePdf returns a valid pdf payload with the new financial fields', () => {

@@ -10,7 +10,7 @@ import {
   upsertQuote
 } from './storage.js';
 
-const PRODUCER_LOGO_URL = new URL('../public/logo.png', import.meta.url).href;
+const PRODUCER_LOGO_URL = new URL('../logo.png', import.meta.url).href;
 
 const state = {
   quotes: loadQuotes(),
