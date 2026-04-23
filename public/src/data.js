@@ -70,22 +70,22 @@ export function parseCurrencyAmount(value) {
   return Number(normalized);
 }
 
-export function formatCurrencyAmount(value) {
+export function formatCurrencyAmount(value, fractionDigits = 2) {
   if (!Number.isFinite(value)) return '';
   return new Intl.NumberFormat('es-AR', {
     style: 'currency',
     currency: 'ARS',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits
   })
     .format(value)
     .replace(/\u00a0/g, ' ');
 }
 
-export function calculateMonthlyInstallment(totalPremium, installments = 6) {
+export function calculateMonthlyInstallment(totalPremium, installments = 6, fractionDigits = 0) {
   const amount = typeof totalPremium === 'number' ? totalPremium : parseCurrencyAmount(totalPremium);
   if (!Number.isFinite(amount) || !installments) return '';
-  return formatCurrencyAmount(amount / installments);
+  return formatCurrencyAmount(amount / installments, fractionDigits);
 }
 
 export function createQuoteNumber(sequence = 1, date = new Date()) {

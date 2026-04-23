@@ -16,6 +16,10 @@ test('createQuoteNumber formats year and sequence', () => {
   assert.equal(quoteNumber, 'COT-2026-0007');
 });
 
+test('calculateMonthlyInstallment formats fleet installment without decimals', () => {
+  assert.equal(calculateMonthlyInstallment('$ 6.000.000'), '$ 1.000.000');
+});
+
 test('duplicateQuoteData keeps business data but refreshes identifiers', () => {
   const source = normalizeQuote({
     ...createEmptyQuote({ sequence: 3, now: new Date('2026-04-22T12:00:00Z') }),
