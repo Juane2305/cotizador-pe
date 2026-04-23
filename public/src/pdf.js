@@ -1,4 +1,4 @@
-import { formatDisplayDate, getProducerInitials, splitNotesLines } from './data.js';
+import { calculateMonthlyInstallment, formatDisplayDate, getProducerInitials, splitNotesLines } from './data.js';
 
 const PAGE = { width: 595.28, height: 841.89, margin: 38 };
 const COLORS = {
@@ -308,12 +308,23 @@ function drawValuesTable(doc, quote, cursorY) {
   const labelWidth = 150;
   const contentWidth = PAGE.width - PAGE.margin * 2;
   const valueWidth = contentWidth - labelWidth;
-  const rows = [
-    ['Suma asegurada', quote.insurance.insuredAmount || '—', COLORS.lightBlue, COLORS.white, COLORS.navy],
-    ['Franquicia', quote.insurance.deductible || '—', COLORS.lightBlue, COLORS.white, COLORS.navy],
-    ['PREMIO MENSUAL', quote.insurance.monthlyPremium || '—', COLORS.orange, COLORS.softOrange, COLORS.white],
-    ['PREMIO ANUAL', quote.insurance.annualPremium || '—', COLORS.navy, COLORS.strongBlue, COLORS.white]
-  ];
+  const rows = quote.quoteType === 'fleet'
+    ? [
+        ['PREMIO SEMESTRAL', quote.insurance.annualPremium || '—', COLORS.orange, COLORS.softOrange, COLORS.white],
+        [
+          'VALOR CUOTA MENSUAL',
+          calculateMonthlyInstallment(quote.insurance.annualPremium) || quote.insurance.monthlyPremium || '—',
+          COLORS.navy,
+          COLORS.strongBlue,
+          COLORS.white
+        ]
+      ]
+    : [
+        ['Suma asegurada', quote.insurance.insuredAmount || '—', COLORS.lightBlue, COLORS.white, COLORS.navy],
+        ['Franquicia', quote.insurance.deductible || '—', COLORS.lightBlue, COLORS.white, COLORS.navy],
+        ['PREMIO MENSUAL', quote.insurance.monthlyPremium || '—', COLORS.orange, COLORS.softOrange, COLORS.white],
+        ['PREMIO ANUAL', quote.insurance.annualPremium || '—', COLORS.navy, COLORS.strongBlue, COLORS.white]
+      ];
 
   rows.forEach(([label, value, labelFill, valueFill, labelColor]) => {
     doc.rect(PAGE.margin, cursorY, labelWidth, 28, { fill: labelFill, stroke: COLORS.border });

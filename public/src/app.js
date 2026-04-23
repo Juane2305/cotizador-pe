@@ -1,4 +1,11 @@
-import { createEmptyQuote, DEFAULT_COVERAGE, DEFAULT_FLEET_VEHICLE, formatDisplayDate, normalizeQuote } from './data.js';
+import {
+  calculateMonthlyInstallment,
+  createEmptyQuote,
+  DEFAULT_COVERAGE,
+  DEFAULT_FLEET_VEHICLE,
+  formatDisplayDate,
+  normalizeQuote
+} from './data.js';
 import { renderQuotePreview } from './template.js';
 import {
   createDuplicateQuote,
@@ -36,6 +43,10 @@ const fleetSection = document.querySelector('#fleet-section');
 const addFleetVehicleButton = document.querySelector('#add-fleet-vehicle');
 const generalCoveragesTitle = document.querySelector('#general-coverages-title');
 const insuredObjectLabel = document.querySelector('[data-insured-object-label]');
+const insuredAmountField = form.elements.namedItem('insuranceInsuredAmount');
+const deductibleField = form.elements.namedItem('insuranceDeductible');
+const monthlyPremiumField = form.elements.namedItem('insuranceMonthlyPremium');
+const annualPremiumField = form.elements.namedItem('insuranceAnnualPremium');
 
 const fieldMap = {
   producerAdvisorName: ['producer', 'advisorName'],
@@ -94,6 +105,11 @@ function syncProducerProfileFromQuote() {
   state.producerProfile = saveProducerProfile(state.currentQuote.producer);
 }
 
+function syncFleetPremiumFields() {
+  if (state.currentQuote.quoteType !== 'fleet') return;
+  state.currentQuote.insurance.monthlyPremium = calculateMonthlyInstallment(state.currentQuote.insurance.annualPremium);
+}
+
 function updateQuoteFromField(name, value) {
   const path = fieldMap[name];
   if (!path) return;
@@ -102,7 +118,15 @@ function updateQuoteFromField(name, value) {
 
   if (name === 'quoteType') {
     ensureFleetVehicles();
+    syncFleetPremiumFields();
     render();
+    return;
+  }
+
+  if (name === 'insuranceAnnualPremium' && state.currentQuote.quoteType === 'fleet') {
+    syncFleetPremiumFields();
+    renderConditionalSections();
+    renderPreview();
     return;
   }
 
@@ -205,6 +229,24 @@ function renderConditionalSections() {
   fleetSection.hidden = !isFleet;
   insuredObjectLabel.textContent = isFleet ? 'Descripción general de la flota' : 'Objeto asegurado / descripción general';
   generalCoveragesTitle.textContent = isFleet ? 'Coberturas generales (opcional)' : 'Coberturas incluidas';
+
+  const insuredAmountWrapper = insuredAmountField?.closest('label');
+  const deductibleWrapper = deductibleField?.closest('label');
+  const monthlyPremiumWrapper = monthlyPremiumField?.closest('label');
+  const annualPremiumWrapper = annualPremiumField?.closest('label');
+  const monthlyPremiumLabel = monthlyPremiumWrapper?.querySelector('span');
+  const annualPremiumLabel = annualPremiumWrapper?.querySelector('span');
+
+  if (insuredAmountWrapper) insuredAmountWrapper.hidden = isFleet;
+  if (deductibleWrapper) deductibleWrapper.hidden = isFleet;
+  if (monthlyPremiumLabel) monthlyPremiumLabel.textContent = isFleet ? 'Valor cuota mensual' : 'Premio mensual';
+  if (annualPremiumLabel) annualPremiumLabel.textContent = isFleet ? 'Premio semestral' : 'Premio anual';
+
+  if (monthlyPremiumField instanceof HTMLInputElement) {
+    monthlyPremiumField.readOnly = isFleet;
+    monthlyPremiumField.placeholder = isFleet ? 'Automático = premio semestral / 6' : '$ 0,00';
+    if (isFleet) monthlyPremiumField.value = state.currentQuote.insurance.monthlyPremium;
+  }
 }
 
 function renderForm() {

@@ -1,7 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createEmptyQuote, createQuoteNumber, duplicateQuoteData, normalizeQuote } from '../public/src/data.js';
+import {
+  calculateMonthlyInstallment,
+  createEmptyQuote,
+  createQuoteNumber,
+  duplicateQuoteData,
+  normalizeQuote
+} from '../public/src/data.js';
 import { createQuotePdf } from '../public/src/pdf.js';
 import { renderQuotePreview } from '../public/src/template.js';
 
@@ -140,6 +146,36 @@ test('renderQuotePreview builds fleet summary and annex for larger fleets', () =
   const html = renderQuotePreview(quote, { logoUrl: '/logo.png' });
   assert.match(html, /RESUMEN DE FLOTA/);
   assert.match(html, /ANEXO DE VEHÍCULOS/);
+  assert.match(html, /Premio semestral/);
+  assert.match(html, /Valor cuota mensual/);
+  assert.match(html, new RegExp(calculateMonthlyInstallment('$ 30.000.000').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   assert.match(html, /Toyota Hilux/);
   assert.match(html, /Mercedes Sprinter/);
+  assert.doesNotMatch(html, /<div class="quote-values__label">Suma asegurada<\/div>/);
+});
+
+test('createQuotePdf uses semestral premium labels for fleet quotes', () => {
+  const quote = normalizeQuote({
+    ...createEmptyQuote({ sequence: 6 }),
+    quoteType: 'fleet',
+    client: { fullName: 'Logística Cuyo', document: '30-777', phone: '261', email: 'fleet@test.com' },
+    insurance: {
+      type: 'Automotor',
+      company: 'San Cristóbal',
+      plan: 'Flota',
+      insuredObject: 'Utilitarios',
+      validFrom: '2026-05-01',
+      validUntil: '2026-11-01',
+      paymentMethod: 'Semestral',
+      annualPremium: '$ 6.000.000'
+    },
+    fleetVehicles: [{ id: '1', brand: 'Ford', model: 'Transit', year: '2024', insuredAmount: '$ 35.000.000', coverage: 'Todo riesgo', coverageDetail: 'Incluye granizo' }]
+  });
+
+  const bytes = createQuotePdf(quote);
+  const text = new TextDecoder().decode(bytes);
+
+  assert.match(text, /PREMIO SEMESTRAL/);
+  assert.match(text, /VALOR CUOTA MENSUAL/);
+  assert.match(text, new RegExp(calculateMonthlyInstallment('$ 6.000.000').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 });

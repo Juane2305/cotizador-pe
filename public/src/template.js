@@ -1,4 +1,4 @@
-import { formatDisplayDate, getProducerInitials, splitNotesLines } from './data.js';
+import { calculateMonthlyInstallment, formatDisplayDate, getProducerInitials, splitNotesLines } from './data.js';
 
 function escapeHtml(value = '') {
   return String(value)
@@ -150,6 +150,47 @@ export function renderQuotePreview(quote, { logoUrl = '' } = {}) {
     : 'Flota';
   const inlineFleetDetails = isFleet && vehicles.length > 0 && vehicles.length <= 3;
   const annexFleetDetails = isFleet && vehicles.length > 3;
+  const valueRows = isFleet
+    ? [
+        {
+          label: 'Premio semestral',
+          value: quote.insurance.annualPremium,
+          labelClass: 'quote-values__label quote-values__label--accent',
+          valueClass: 'quote-values__value quote-values__value--accent'
+        },
+        {
+          label: 'Valor cuota mensual',
+          value: calculateMonthlyInstallment(quote.insurance.annualPremium) || quote.insurance.monthlyPremium,
+          labelClass: 'quote-values__label quote-values__label--strong',
+          valueClass: 'quote-values__value quote-values__value--strong'
+        }
+      ]
+    : [
+        {
+          label: 'Suma asegurada',
+          value: quote.insurance.insuredAmount,
+          labelClass: 'quote-values__label',
+          valueClass: 'quote-values__value'
+        },
+        {
+          label: 'Franquicia',
+          value: quote.insurance.deductible,
+          labelClass: 'quote-values__label',
+          valueClass: 'quote-values__value'
+        },
+        {
+          label: 'Premio mensual',
+          value: quote.insurance.monthlyPremium,
+          labelClass: 'quote-values__label quote-values__label--accent',
+          valueClass: 'quote-values__value quote-values__value--accent'
+        },
+        {
+          label: 'Premio anual',
+          value: quote.insurance.annualPremium,
+          labelClass: 'quote-values__label quote-values__label--strong',
+          valueClass: 'quote-values__value quote-values__value--strong'
+        }
+      ];
 
   return `
     <article class="quote-sheet printable-quote">
@@ -213,14 +254,14 @@ export function renderQuotePreview(quote, { logoUrl = '' } = {}) {
       <section class="quote-sheet__section">
         <div class="quote-section__heading">SUMA ASEGURADA Y VALORES</div>
         <div class="quote-values">
-          <div class="quote-values__label">Suma asegurada</div>
-          <div class="quote-values__value">${renderValue(quote.insurance.insuredAmount)}</div>
-          <div class="quote-values__label">Franquicia</div>
-          <div class="quote-values__value">${renderValue(quote.insurance.deductible)}</div>
-          <div class="quote-values__label quote-values__label--accent">Premio mensual</div>
-          <div class="quote-values__value quote-values__value--accent">${renderValue(quote.insurance.monthlyPremium)}</div>
-          <div class="quote-values__label quote-values__label--strong">Premio anual</div>
-          <div class="quote-values__value quote-values__value--strong">${renderValue(quote.insurance.annualPremium)}</div>
+          ${valueRows
+            .map(
+              ({ label, value, labelClass, valueClass }) => `
+                <div class="${labelClass}">${escapeHtml(label)}</div>
+                <div class="${valueClass}">${renderValue(value)}</div>
+              `
+            )
+            .join('')}
         </div>
       </section>
 

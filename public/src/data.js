@@ -47,6 +47,47 @@ export function formatDisplayDate(dateString) {
   return `${day}/${month}/${year}`;
 }
 
+export function parseCurrencyAmount(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw || !/\d/.test(raw)) return Number.NaN;
+
+  let normalized = raw.replace(/[^\d,.-]/g, '');
+  const lastComma = normalized.lastIndexOf(',');
+  const lastDot = normalized.lastIndexOf('.');
+
+  if (lastComma > -1 && lastDot > -1) {
+    normalized = lastComma > lastDot
+      ? normalized.replace(/\./g, '').replace(',', '.')
+      : normalized.replace(/,/g, '');
+  } else if (lastComma > -1) {
+    const decimals = normalized.length - lastComma - 1;
+    normalized = decimals > 0 && decimals <= 2 ? normalized.replace(',', '.') : normalized.replace(/,/g, '');
+  } else if (lastDot > -1) {
+    const decimals = normalized.length - lastDot - 1;
+    normalized = decimals > 0 && decimals <= 2 ? normalized : normalized.replace(/\./g, '');
+  }
+
+  return Number(normalized);
+}
+
+export function formatCurrencyAmount(value) {
+  if (!Number.isFinite(value)) return '';
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })
+    .format(value)
+    .replace(/\u00a0/g, ' ');
+}
+
+export function calculateMonthlyInstallment(totalPremium, installments = 6) {
+  const amount = typeof totalPremium === 'number' ? totalPremium : parseCurrencyAmount(totalPremium);
+  if (!Number.isFinite(amount) || !installments) return '';
+  return formatCurrencyAmount(amount / installments);
+}
+
 export function createQuoteNumber(sequence = 1, date = new Date()) {
   const year = date.getFullYear();
   return `COT-${year}-${String(sequence).padStart(4, '0')}`;
